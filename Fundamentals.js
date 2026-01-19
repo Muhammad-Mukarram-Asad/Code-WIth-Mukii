@@ -1,3 +1,5 @@
+// Closure Examole: 
+
 function Outer() {
   let count = 0;
   
