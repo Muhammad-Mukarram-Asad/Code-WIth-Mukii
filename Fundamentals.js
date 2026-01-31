@@ -20,3 +20,10 @@ const counter = Outer();  // ← Outer() EXECUTES and FINISHES here
 
 counter();  // Now Inner executes → logs 1
 counter();  // Inner executes again → logs 2
+
+// Some common hacks of JS:
+
+[]==[]
+{}=={}
+true==true
+0.1+0.2 == 0.3 => false
