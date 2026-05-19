@@ -1,0 +1,72 @@
+/**
+ * --------------------------------------------------------
+ * Script: replaceBaseUrl.js
+ * Purpose:
+ *  - Finds all hardcoded URLs starting with https://staging.hysabkytab.app
+ *  - Replaces them with `${BASE_URL}/...`
+ *  - Adds import { BASE_URL } from '@/api/environment';
+ * --------------------------------------------------------
+ */
+
+import fs from "fs";
+import path from "path";
+
+const baseDir = "./src"; // 🔧 your main source directory
+const regex = /["'`]https:\/\/staging\.hysabkytab\.app\/([^"'`]+)["'`]/g;
+const importLine = `import { BASE_URL } from '@/api/environment';`;
+
+/**
+ * Process a single file:
+ * - Reads its content
+ * - Replaces URL occurrences
+ * - Adds import if not already present
+ */
+function processFile(filePath) {
+  let content = fs.readFileSync(filePath, "utf8");
+  let updated = false;
+
+  // Replace hardcoded URLs with template literals
+  const replaced = content.replace(regex, (_, restOfUrl) => {
+    updated = true;
+    return `\`${'${BASE_URL}'}/${restOfUrl}\``;
+  });
+
+  if (updated) {
+    let finalContent = replaced;
+
+    // Add import line if missing
+    if (!finalContent.includes(importLine)) {
+      const lines = finalContent.split("\n");
+      const firstImport = lines.findIndex((line) => line.startsWith("import"));
+      const insertIndex = firstImport >= 0 ? firstImport + 1 : 0;
+      lines.splice(insertIndex, 0, importLine);
+      finalContent = lines.join("\n");
+      console.log(`📦 Added BASE_URL import & updated: ${filePath}`);
+    } else {
+      console.log(`✅ Updated: ${filePath}`);
+    }
+
+    fs.writeFileSync(filePath, finalContent, "utf8");
+  }
+}
+
+/**
+ * Walk through directories recursively
+ */
+function walkDir(dir) {
+  fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walkDir(fullPath);
+    } else if (/\.(js|jsx|ts|tsx)$/.test(entry.name)) {
+      processFile(fullPath);
+    }
+  });
+}
+
+/**
+ * Run the refactor
+ */
+console.log("🚀 Starting base URL refactor...");
+walkDir(baseDir);
+console.log("🎯 Refactor complete!");
